@@ -83,7 +83,17 @@ class AgedItem(BaseItem):
 
     def _aged(self):
         if self._expired():
-            self.quality = self.quality + STANDARD_QUALITY_DELTA
+            self._raise_quality()
+
+
+class ConjuredItem(BaseItem):
+    def __init__(self, item):
+        super(self.__class__, self).__init__(item)
+
+    def update(self):
+        self._drop_quality()
+        self._drop_quality()
+        self._min_quality_check()
 
 
 class LegendaryItem(BaseItem):
@@ -103,7 +113,8 @@ class GildedRose(object):
             "Backstage passes to a TAFKAL80ETC concert": ConcertItem,
             "Sulfuras, Hand of Ragnaros": LegendaryItem,
             "Elixir of the Mongoose": BaseItem,
-            "+5 Dexterity Vest": BaseItem
+            "+5 Dexterity Vest": BaseItem,
+            "Conjured Mana Cake": ConjuredItem
         }
 
     def update_quality(self):

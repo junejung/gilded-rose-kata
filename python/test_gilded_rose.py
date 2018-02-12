@@ -141,8 +141,7 @@ class GildedRoseTest(unittest.TestCase):
 
         self.assertEquals(items[0].quality, MIN_QUANTITY)
 
-    @unittest.skip("functionality has not implemented yet")
-    def test_conjured_item_drops_value_faster(self):
+    def test_conjured_item_drops_value_twice_faster(self):
         set_sell_in = 10
         set_quality = 20
         expected_decrease = 2
@@ -152,6 +151,14 @@ class GildedRoseTest(unittest.TestCase):
         gilded_rose.update_quality()
 
         self.assertEquals(items[0].quality, set_quality - expected_decrease)
+
+    def test_conjured_item_quality_can_not_be_negative(self):
+        items = [Item(self.conjured_item_name, SELL_IN_DUE, MIN_QUANTITY)]
+        gilded_rose = GildedRose(items)
+
+        gilded_rose.update_quality()
+
+        self.assertEquals(items[0].quality, MIN_QUANTITY)
 
 if __name__ == '__main__':
     unittest.main()
