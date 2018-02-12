@@ -16,14 +16,38 @@ class Item:
         return "%s, %s, %s" % (self.name, self.sell_in, self.quality)
 
 
-class ConcertItem(Item):
+class BaseItem:
     def __init__(self, item):
-        super(self.__class__, self).__init__(name=item.name,
-                                             sell_in=item.sell_in,
-                                             quality=item.quality)
+        self.name=item.name
+        self.sell_in=item.sell_in
+        self.quality=item.quality
 
     def update(self):
-        self.quality = self.quality + 1 + self.extra_quality()
+        self.quality = self.quality - (STANDARD_QUALITY_DROP + self._extra())
+        print(STANDARD_QUALITY_DROP + self._extra())
+
+        return MIN_QUALITY if self.quality < MIN_QUALITY else self.quality
+
+    def _extra(self):
+        if self._expired():
+            return STANDARD_QUALITY_DROP
+
+        return 0
+
+    def _expired(self):
+        return self.sell_in < SELL_IN_DUE
+
+
+    def _exceed_max_quality(self, quality):
+        return True if quality > MAX_QUALITY else False
+
+
+class ConcertItem(BaseItem):
+    def __init__(self, item):
+        super(self.__class__, self).__init__(item)
+
+    def update(self):
+        self.quality = self.quality + 1 + self._extra()
 
         if self._expired():
             self.quality = MIN_QUALITY
@@ -33,19 +57,13 @@ class ConcertItem(Item):
 
         return self.quality
 
-    def extra_quality(self):
+    def _extra(self):
         if self.sell_in < 6:
             return 2
         elif self.sell_in < 11:
             return 1
 
         return 0
-
-    def _expired(self):
-        return self.sell_in < SELL_IN_DUE
-
-    def _exceed_max_quality(self, quality):
-        return True if quality > MAX_QUALITY else False
 
 
 class GildedRose(object):
@@ -55,7 +73,6 @@ class GildedRose(object):
 
     def _is_standard_item(self, item):
         if item.name != "Aged Brie" and item.name != "Backstage passes to a TAFKAL80ETC concert":
-            if item.quality > 0:
                 if item.name != "Sulfuras, Hand of Ragnaros":
                     return True
         return False
@@ -69,20 +86,14 @@ class GildedRose(object):
             if item.name == "Backstage passes to a TAFKAL80ETC concert":
                 item.quality = ConcertItem(item).update()
             elif self._is_standard_item(item):
-                item.quality = item.quality - STANDARD_QUALITY_DROP
+                item.quality =BaseItem(item).update()
             else:
                 if item.quality < MAX_QUALITY:
                     # all none standard item quality increase
                     item.quality = item.quality + 1
 
             if item.sell_in < SELL_IN_DUE:
-                if item.name != "Aged Brie":
-                    if item.name != "Backstage passes to a TAFKAL80ETC concert":
-                        if item.quality > 0:
-                            if item.name != "Sulfuras, Hand of Ragnaros":
-                                # sell in passed - standard item decrease quality again
-                                item.quality = item.quality - STANDARD_QUALITY_DROP
-                else:
+                if item.name == "Aged Brie":
                     # sell in passed - aged item quality increase
                     if item.quality < MAX_QUALITY:
                         item.quality = item.quality + 1
