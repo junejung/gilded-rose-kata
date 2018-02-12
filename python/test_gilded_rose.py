@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import unittest
 
-from gilded_rose import Item, GildedRose
+from gilded_rose import Item, ConcertItem, GildedRose
 
 SELL_IN_DUE = 0
 MAX_QUANTITY = 50
@@ -16,6 +16,27 @@ class GildedRoseTest(unittest.TestCase):
         self.item_name = "+5 Dexterity Vest"
         self.conjured_item_name = "Conjured Mana Cake"
 
+    # Concert Item tests
+    def test_concert_item_update_returns_updated_quality_under_max_quantity(self):
+        set_quality = 48
+        set_sell_in = 4
+        concert_item = ConcertItem(Item(self.concert_item_name, set_sell_in, set_quality))
+
+        concert_item.update()
+
+        self.assertEquals(concert_item.quality, MAX_QUANTITY)
+
+    def test_concert_item_update_returns_updated_quality(self):
+        set_quality = 30
+        set_sell_in = 4
+        expected_increase = 3
+        concert_item = ConcertItem(Item(self.concert_item_name, set_sell_in, set_quality))
+
+        concert_item.update()
+
+        self.assertEquals(concert_item.quality, set_quality + expected_increase)
+
+    # gilded rose requirements to tests
     def test_item_when_update_quality_called_sell_in_reduces(self):
         items = [Item("foo", SELL_IN_DUE, 1)]
         gilded_rose = GildedRose(items)
