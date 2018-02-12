@@ -2,7 +2,7 @@
 
 MAX_QUALITY = 50
 MIN_QUALITY = 0
-STANDARD_QUALITY_DROP = 1
+STANDARD_QUALITY_DELTA = 1
 A_DAY_PASSED = 1
 SELL_IN_DUE = 0
 
@@ -22,24 +22,35 @@ class BaseItem:
         self.sell_in=item.sell_in
         self.quality=item.quality
 
-    def update(self):
-        self.quality = self.quality - (STANDARD_QUALITY_DROP + self._extra())
-        print(STANDARD_QUALITY_DROP + self._extra())
+        self._next_day()
 
-        return MIN_QUALITY if self.quality < MIN_QUALITY else self.quality
+    def update(self):
+        self._drop_quality()
+        self._extra()
+
+        self._min_quality_check()
 
     def _extra(self):
         if self._expired():
-            return STANDARD_QUALITY_DROP
+            self._drop_quality()
 
-        return 0
+    def _next_day(self):
+        self.sell_in = self.sell_in - A_DAY_PASSED
+
+    def _drop_quality(self):
+        self.quality = self.quality - STANDARD_QUALITY_DELTA
+
+    def _raise_quality(self):
+        self.quality = self.quality + STANDARD_QUALITY_DELTA
 
     def _expired(self):
         return self.sell_in < SELL_IN_DUE
 
+    def _max_quality_check(self):
+        self.quality = MAX_QUALITY if self.quality > MAX_QUALITY else self.quality
 
-    def _exceed_max_quality(self, quality):
-        return True if quality > MAX_QUALITY else False
+    def _min_quality_check(self):
+        self.quality = MIN_QUALITY if self.quality <= MIN_QUALITY else self.quality
 
 
 class ConcertItem(BaseItem):
@@ -47,53 +58,60 @@ class ConcertItem(BaseItem):
         super(self.__class__, self).__init__(item)
 
     def update(self):
-        self.quality = self.quality + 1 + self._extra()
+        self._raise_quality()
+        self._extra()
 
-        if self._expired():
-            self.quality = MIN_QUALITY
-
-        if self._exceed_max_quality(self.quality):
-            self.quality = MAX_QUALITY
-
-        return self.quality
+        self._max_quality_check()
+        if self._expired() : self.quality = MIN_QUALITY
 
     def _extra(self):
-        if self.sell_in < 6:
-            return 2
-        elif self.sell_in < 11:
-            return 1
+        if self.sell_in < 11:
+            self._raise_quality()
+            if self.sell_in < 6:
+                self._raise_quality()
 
-        return 0
+
+class AgedItem(BaseItem):
+    def __init__(self, item):
+        super(self.__class__, self).__init__(item)
+
+    def update(self):
+        self._raise_quality()
+        self._aged()
+
+        self._max_quality_check()
+
+    def _aged(self):
+        if self._expired():
+            self.quality = self.quality + STANDARD_QUALITY_DELTA
+
+
+class LegendaryItem(BaseItem):
+    def __init__(self, item):
+        super(self.__class__, self).__init__(item)
+
+    def update(self):
+        return self
 
 
 class GildedRose(object):
 
     def __init__(self, items):
         self.items = items
-
-    def _is_standard_item(self, item):
-        if item.name != "Aged Brie" and item.name != "Backstage passes to a TAFKAL80ETC concert":
-                if item.name != "Sulfuras, Hand of Ragnaros":
-                    return True
-        return False
+        self._item_map = {
+            "Aged Brie": AgedItem,
+            "Backstage passes to a TAFKAL80ETC concert": ConcertItem,
+            "Sulfuras, Hand of Ragnaros": LegendaryItem,
+            "Elixir of the Mongoose": BaseItem,
+            "+5 Dexterity Vest": BaseItem
+        }
 
     def update_quality(self):
         for item in self.items:
-            # sell_in update
-            if item.name != "Sulfuras, Hand of Ragnaros":
-                item.sell_in = item.sell_in - A_DAY_PASSED
-            # standard item update
-            if item.name == "Backstage passes to a TAFKAL80ETC concert":
-                item.quality = ConcertItem(item).update()
-            elif self._is_standard_item(item):
-                item.quality =BaseItem(item).update()
-            else:
-                if item.quality < MAX_QUALITY:
-                    # all none standard item quality increase
-                    item.quality = item.quality + 1
-
-            if item.sell_in < SELL_IN_DUE:
-                if item.name == "Aged Brie":
-                    # sell in passed - aged item quality increase
-                    if item.quality < MAX_QUALITY:
-                        item.quality = item.quality + 1
+            try:
+                mapped_item = self._item_map[item.name](item)
+                mapped_item.update()
+                item.quality = mapped_item.quality
+                item.sell_in = mapped_item.sell_in
+            except:
+                print("Unknown item {}. Please add to the item map".format(item.name))

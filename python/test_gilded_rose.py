@@ -13,7 +13,7 @@ class GildedRoseTest(unittest.TestCase):
         self.aged_item_name = "Aged Brie"
         self.legendary_item_name = "Sulfuras, Hand of Ragnaros"
         self.concert_item_name = "Backstage passes to a TAFKAL80ETC concert"
-        self.standard_item_name = "+5 Dexterity Vest"
+        self.base_item_name = "+5 Dexterity Vest"
         self.conjured_item_name = "Conjured Mana Cake"
 
     # Concert Item tests
@@ -38,7 +38,7 @@ class GildedRoseTest(unittest.TestCase):
 
     # gilded rose requirements to tests
     def test_item_when_update_quality_called_sell_in_reduces(self):
-        items = [Item("foo", SELL_IN_DUE, 1)]
+        items = [Item(self.base_item_name, SELL_IN_DUE, 1)]
         gilded_rose = GildedRose(items)
 
         gilded_rose.update_quality()
@@ -46,7 +46,7 @@ class GildedRoseTest(unittest.TestCase):
         self.assertEquals(items[0].sell_in, -1)
 
     def test_item_when_update_quality_called_quality_decrease(self):
-        items = [Item("foo", SELL_IN_DUE, 1)]
+        items = [Item(self.base_item_name, 1, 1)]
         gilded_rose = GildedRose(items)
 
         gilded_rose.update_quality()
@@ -54,7 +54,7 @@ class GildedRoseTest(unittest.TestCase):
         self.assertEquals(items[0].quality, MIN_QUANTITY)
 
     def test_item_quality_can_not_be_negative(self):
-        items = [Item(self.standard_item_name, SELL_IN_DUE, MIN_QUANTITY)]
+        items = [Item(self.base_item_name, SELL_IN_DUE, MIN_QUANTITY)]
         gilded_rose = GildedRose(items)
 
         gilded_rose.update_quality()
@@ -64,7 +64,7 @@ class GildedRoseTest(unittest.TestCase):
     def test_item_when_sell_in_date_passed_quality_degrades_by_two(self):
         set_quantity = 10
         expected_decrease = 2
-        items = [Item(self.standard_item_name, SELL_IN_DUE, set_quantity)]
+        items = [Item(self.base_item_name, SELL_IN_DUE, set_quantity)]
         gilded_rose = GildedRose(items)
 
         gilded_rose.update_quality()
