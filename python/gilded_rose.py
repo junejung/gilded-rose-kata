@@ -18,9 +18,7 @@ class Item:
 
 class BaseItem:
     def __init__(self, item):
-        self.name=item.name
-        self.sell_in=item.sell_in
-        self.quality=item.quality
+        self.item  = item
 
         self._next_day()
 
@@ -30,27 +28,29 @@ class BaseItem:
 
         self._min_quality_check()
 
+        return self.item
+
     def _extra(self):
         if self._expired():
             self._drop_quality()
 
     def _next_day(self):
-        self.sell_in = self.sell_in - A_DAY_PASSED
+        self.item.sell_in = self.item.sell_in - A_DAY_PASSED
 
     def _drop_quality(self):
-        self.quality = self.quality - STANDARD_QUALITY_DELTA
+        self.item.quality = self.item.quality - STANDARD_QUALITY_DELTA
 
     def _raise_quality(self):
-        self.quality = self.quality + STANDARD_QUALITY_DELTA
+        self.item.quality = self.item.quality + STANDARD_QUALITY_DELTA
 
     def _expired(self):
-        return self.sell_in < SELL_IN_DUE
+        return self.item.sell_in < SELL_IN_DUE
 
     def _max_quality_check(self):
-        self.quality = MAX_QUALITY if self.quality > MAX_QUALITY else self.quality
+        self.item.quality = MAX_QUALITY if self.item.quality > MAX_QUALITY else self.item.quality
 
     def _min_quality_check(self):
-        self.quality = MIN_QUALITY if self.quality <= MIN_QUALITY else self.quality
+        self.item.quality = MIN_QUALITY if self.item.quality <= MIN_QUALITY else self.item.quality
 
 
 class ConcertItem(BaseItem):
@@ -62,12 +62,14 @@ class ConcertItem(BaseItem):
         self._extra()
 
         self._max_quality_check()
-        if self._expired() : self.quality = MIN_QUALITY
+        if self._expired() : self.item.quality = MIN_QUALITY
+
+        return self.item
 
     def _extra(self):
-        if self.sell_in < 11:
+        if self.item.sell_in < 11:
             self._raise_quality()
-            if self.sell_in < 6:
+            if self.item.sell_in < 6:
                 self._raise_quality()
 
 
@@ -80,6 +82,8 @@ class AgedItem(BaseItem):
         self._aged()
 
         self._max_quality_check()
+
+        return self.item
 
     def _aged(self):
         if self._expired():
@@ -95,13 +99,15 @@ class ConjuredItem(BaseItem):
         self._drop_quality()
         self._min_quality_check()
 
+        return self.item
+
 
 class LegendaryItem(BaseItem):
     def __init__(self, item):
         super(self.__class__, self).__init__(item)
 
     def update(self):
-        return self
+        return self.item
 
 
 class GildedRose(object):
@@ -120,9 +126,8 @@ class GildedRose(object):
     def update_quality(self):
         for item in self.items:
             try:
-                mapped_item = self._item_map[item.name](item)
-                mapped_item.update()
-                item.quality = mapped_item.quality
-                item.sell_in = mapped_item.sell_in
+                mapped = self._item_map[item.name](item)
+                item = mapped.update()
+
             except:
                 print("Unknown item {}. Please add to the item map".format(item.name))
