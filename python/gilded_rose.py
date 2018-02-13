@@ -54,7 +54,7 @@ class BaseItem:
         self.item.quality = MAX_QUALITY if self.item.quality > MAX_QUALITY else self.item.quality
 
     def _min_quality_check(self):
-        self.item.quality = MIN_QUALITY if self.item.quality <= MIN_QUALITY else self.item.quality
+        self.item.quality = MIN_QUALITY if self.item.quality < MIN_QUALITY else self.item.quality
 
 
 class ConcertItem(BaseItem):
@@ -78,6 +78,7 @@ class ConcertItem(BaseItem):
 
     def _sell_in_less_than(self, day):
         return True if self.item.sell_in < day else False
+
 
 class AgedItem(BaseItem):
     def __init__(self, item):
