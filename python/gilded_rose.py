@@ -118,8 +118,6 @@ class GildedRose(object):
             "Aged Brie": AgedItem,
             "Backstage passes to a TAFKAL80ETC concert": ConcertItem,
             "Sulfuras, Hand of Ragnaros": LegendaryItem,
-            "Elixir of the Mongoose": BaseItem,
-            "+5 Dexterity Vest": BaseItem,
             "Conjured Mana Cake": ConjuredItem
         }
 
@@ -127,7 +125,7 @@ class GildedRose(object):
         for item in self.items:
             try:
                 mapped = self._item_map[item.name](item)
-                item = mapped.update()
-
             except:
-                print("Unknown item {}. Please add to the item map".format(item.name))
+                mapped = BaseItem(item)
+
+            item = mapped.update()
