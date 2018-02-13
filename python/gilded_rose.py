@@ -6,6 +6,10 @@ STANDARD_QUALITY_DELTA = 1
 A_DAY_PASSED = 1
 SELL_IN_DUE = 0
 
+#Special Concert item magic number
+ElEVEN = 11
+SIX = 6
+
 class Item:
     def __init__(self, name, sell_in, quality):
         self.name = name
@@ -59,19 +63,21 @@ class ConcertItem(BaseItem):
 
     def update(self):
         self._raise_quality()
-        self._extra()
+        self._close_to_due_day()
 
         self._max_quality_check()
         if self._expired() : self.item.quality = MIN_QUALITY
 
         return self.item
 
-    def _extra(self):
-        if self.item.sell_in < 11:
+    def _close_to_due_day(self):
+        if self._sell_in_less_than(ElEVEN):
             self._raise_quality()
-            if self.item.sell_in < 6:
+            if self._sell_in_less_than(SIX):
                 self._raise_quality()
 
+    def _sell_in_less_than(self, day):
+        return True if self.item.sell_in < day else False
 
 class AgedItem(BaseItem):
     def __init__(self, item):
