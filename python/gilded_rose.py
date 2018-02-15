@@ -3,7 +3,7 @@
 MAX_QUALITY = 50
 MIN_QUALITY = 0
 STANDARD_QUALITY_DELTA = 1
-A_DAY_PASSED = 1
+A_DAY = 1
 SELL_IN_DUE = 0
 
 #Special Concert item magic number
@@ -28,18 +28,14 @@ class BaseItem:
 
     def update(self):
         self._drop_quality()
-        self._extra()
+        self._expired()
 
         self._min_quality_check()
 
         return self.item
 
-    def _extra(self):
-        if self._expired():
-            self._drop_quality()
-
     def _next_day(self):
-        self.item.sell_in = self.item.sell_in - A_DAY_PASSED
+        self.item.sell_in = self.item.sell_in - A_DAY
 
     def _drop_quality(self):
         self.item.quality = self.item.quality - STANDARD_QUALITY_DELTA
@@ -47,8 +43,12 @@ class BaseItem:
     def _raise_quality(self):
         self.item.quality = self.item.quality + STANDARD_QUALITY_DELTA
 
-    def _expired(self):
+    def _due_date_passed(self):
         return self.item.sell_in < SELL_IN_DUE
+
+    def _expired(self):
+        if self._due_date_passed():
+            self._drop_quality()
 
     def _max_quality_check(self):
         self.item.quality = MAX_QUALITY if self.item.quality > MAX_QUALITY else self.item.quality
@@ -66,7 +66,7 @@ class ConcertItem(BaseItem):
         self._close_to_due_day()
 
         self._max_quality_check()
-        if self._expired() : self.item.quality = MIN_QUALITY
+        self._expired()
 
         return self.item
 
@@ -78,6 +78,9 @@ class ConcertItem(BaseItem):
 
     def _sell_in_less_than(self, day):
         return True if self.item.sell_in < day else False
+
+    def _expired(self):
+        self.item.quality = MIN_QUALITY if self._due_date_passed() else self.item.quality
 
 
 class AgedItem(BaseItem):
@@ -93,7 +96,7 @@ class AgedItem(BaseItem):
         return self.item
 
     def _aged(self):
-        if self._expired():
+        if self._due_date_passed():
             self._raise_quality()
 
 
